@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chúc mừng 20/10 — Trang tặng</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;width:100%;overflow:hidden;
+      font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#fff6fb,#fff0f6)}
+
+    .stage{position:relative;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
+
+    /* 🌸 Thiệp chúc mừng 20/10 */
+    .greeting-card {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 28px 36px;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(255, 120, 180, 0.25);
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+      color: #c23b73;
+      font-size: 1.05rem;
+      z-index: 80;
+    }
+    .greeting-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #e04b87;
+      font-weight: 700;
+    }
+
+    .overlay{position:fixed;inset:0;background:rgba(12,6,10,0.45);
+      display:none;align-items:center;justify-content:center;z-index:90}
+    .overlay.show{display:flex}
+
+    .popup{
+      position:relative;
+      width:min(720px,92vw);
+      background:linear-gradient(180deg,#ffffff,#fff7fb);
+      border-radius:18px;
+      box-shadow:0 20px 60px rgba(128,36,75,0.15);
+      padding:20px;display:flex;gap:18px;align-items:center;
+      transform:scale(0.9);
+      opacity:0;
+      transition:all .35s ease;
+    }
+    .overlay.show .popup{transform:scale(1);opacity:1}
+
+    .popup img{width:180px;height:180px;border-radius:12px;object-fit:cover;flex-shrink:0}
+    .popup .text{flex:1}
+    .popup h3{margin-bottom:8px;color:#e04b87;font-size:1.15rem}
+    .popup p{color:#5b3943;font-size:1rem;line-height:1.4}
+    .close-btn{
+      position:absolute;top:10px;right:12px;
+      background:none;border:none;font-size:1.2rem;
+      color:#d15a84;cursor:pointer;
+      transition:transform .2s ease;
+    }
+    .close-btn:hover{transform:scale(1.2)}
+
+    .heart-particle{position:fixed;width:14px;height:14px;border-radius:50%;pointer-events:none;z-index:100}
+
+    .hint{position:fixed;left:50%;transform:translateX(-50%);
+      bottom:18px;color:#7b4450;opacity:0.95;font-size:.95rem}
+
+    .gift{position:fixed;top:-90px;
+      background-image:url('meme/gift-box.png');
+      background-size:contain;background-repeat:no-repeat;
+      cursor:pointer;will-change:transform,opacity}
+
+    @media (max-width:520px){
+      .popup{flex-direction:column;align-items:center}
+      .popup img{width:46vw;height:46vw;border-radius:12px}
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" aria-hidden="true"></div>
+
+  <!-- 🌸 Thiệp chúc mừng luôn hiển thị -->
+  <div class="greeting-card">
+    <h2>🎉 Chúc mừng 20/10 🎉</h2>
+    <p>Ngày Phụ nữ Việt Nam 💐<br>
+    Chúc em ngày 20/10 thật nhiều niềm vui và nụ cười!</p>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="popup" id="popup">
+      <button class="close-btn" id="closeBtn">✖</button>
+      <img id="personImg" src="" alt="ảnh"/>
+      <div class="text">
+        <h3 id="popupTitle">🎀 Một thông điệp nho nhỏ</h3>
+        <p id="popupText">Nhân ngày 20/10, chúc bạn: xinh hơn hoa hậu, lắm trai theo hơn hotgirl TikTok, và bớt ảo tí thôi cho đời đỡ khổ 🤣</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">Nhấn vào hộp quà để mở quà — click ra ngoài popup để đóng.</div>
+
+  <!-- 🎵 Nhạc nền -->
+  <audio id="bgMusic" loop>
+    <source src="Code/20-10-theme.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const messages = [
+      'Chúc bạn 20/10 vui như trúng số, đẹp như hoa hậu, giàu như đại gia, và… ăn hoài không béo!',
+      '20/10 chúc bạn: tiền đầy ví, sắc đầy mình, trai theo đầy ngõ mà vẫn… ế vì kén quá!',
+      '20/10 đến rồi, chúc bạn: da trắng như bông, môi đỏ như son, tình duyên thì… chưa thấy nhưng cứ vui trước đã!',
+      'Hôm nay là ngày phụ nữ, chúc bạn được “tặng quà” nhiều đến mức… không biết chọn ai đầu tiên để cảm ơn!',
+      'Ngày 20/10, chúc bạn luôn trẻ, luôn khỏe, luôn đẹp — và đặc biệt là luôn biết tiêu tiền đúng lúc!',
+      'Chúc bạn ngày Phụ nữ Việt Nam rạng rỡ như hoa, “mặn mà” như biển, và “thính” như… cá cơm!',
+      '20/10 chúc bạn sớm có người yêu để còn nhận quà, chứ cứ FA hoài như này thì tội nghiệp quá 💞',
+      '20/10 chúc bạn luôn xinh như ảnh mạng, giỏi như AI, và giàu như… tưởng tượng của chính mình!'
+    ];
+
+    const imgs = [
+      'meme/5ae3505b-abb9-473e-923c-4762b03ced2e.jpg',
+      'meme/22a2a3d8-e88a-4f7e-983c-240b2e96cafd.jpg',
+      'meme/33faeed3-1dc4-42e5-9ff8-0c881aeb4b3b.jpg',
+      'meme/045e3950-dba4-49ad-8088-f6313727ae08.jpg',
+      'meme/c0594026-51e1-4aac-bc78-6abe86d73129.jpg',
+    ];
+
+    const overlay=document.getElementById('overlay');
+    const popup=document.getElementById('popup');
+    const personImg=document.getElementById('personImg');
+    const popupText=document.getElementById('popupText');
+    const closeBtn=document.getElementById('closeBtn');
+    const bgMusic=document.getElementById('bgMusic');
+
+    // 🔊 Nhạc nền
+    document.body.addEventListener('click',()=>{
+      if(bgMusic.paused){bgMusic.play().catch(()=>{});}
+    },{once:true});
+
+    // 🎁 Tạo quà rơi
+    function spawnGift(){
+      const g=document.createElement('div');
+      g.className='gift';
+      const size=26+Math.random()*46;
+      g.style.width=size+'px';
+      g.style.height=size+'px';
+      g.style.left=Math.random()*100+'vw';
+      const duration=(6+Math.random()*6)*1.1;
+      const delay=Math.random()*6;
+      const startY=-120-Math.random()*200;
+      const endY=window.innerHeight+120;
+      g.style.transform=`translateY(${startY}px)`;
+      g.style.opacity=(0.7+Math.random()*0.3).toFixed(2);
+      document.body.appendChild(g);
+
+      const startTime=performance.now()+delay*1000;
+      const durMs=duration*1000;
+      function step(now){
+        if(now<startTime){requestAnimationFrame(step);return;}
+        const t=Math.min((now-startTime)/durMs,1);
+        const ease=1-(1-t)*(1-t);
+        const y=startY+(endY-startY)*ease;
+        const rot=ease*720;
+        g.style.transform=`translateY(${y}px) rotate(${rot}deg)`;
+        if(t<1){requestAnimationFrame(step);}else{g.remove();}
+      }
+      requestAnimationFrame(step);
+
+      g.addEventListener('click',e=>{
+        e.stopPropagation();
+        const msg=messages[Math.floor(Math.random()*messages.length)];
+        const im=imgs[Math.floor(Math.random()*imgs.length)];
+        personImg.src=im;
+        popupText.textContent=msg;
+        overlay.classList.add('show');
+        spawnHearts(e.clientX,e.clientY);
+        g.style.transition='transform 350ms ease, opacity 350ms ease';
+        g.style.transform='scale(0.6) translateY(30px) rotate(20deg)';
+        g.style.opacity='0.15';
+        setTimeout(()=>{g.remove();},400);
+      });
+    }
+
+    setInterval(()=>{if(document.querySelectorAll('.gift').length<40)spawnGift();},700);
+    for(let i=0;i<20;i++)spawnGift();
+
+    overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.classList.remove('show');}});
+    closeBtn.addEventListener('click',()=>overlay.classList.remove('show'));
+    popup.addEventListener('click',e=>{e.stopPropagation();});
+
+    function spawnHearts(x,y){
+      const count=12;
+      for(let i=0;i<count;i++){
+        const p=document.createElement('div');
+        p.className='heart-particle';
+        p.style.left=(x+(Math.random()*120-60))+'px';
+        p.style.top=(y+(Math.random()*40-20))+'px';
+        const s=8+Math.random()*18;
+        p.style.width=s+'px';
+        p.style.height=s+'px';
+        p.style.background=`radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.1)), hsl(${330+Math.random()*30}deg 70% ${55-Math.random()*10}%)`;
+        p.style.borderRadius='4px';
+        p.style.opacity='1';
+        p.style.transform='translateY(0) scale(0.9) rotate(0deg)';
+        p.style.transition='transform 1100ms cubic-bezier(.2,.9,.2,1), opacity 1100ms';
+        document.body.appendChild(p);
+        setTimeout(()=>{
+          const dx=(Math.random()*160-80);
+          const dy=-(120+Math.random()*160);
+          const rot=(Math.random()*720-360);
+          p.style.transform=`translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(1)`;
+          p.style.opacity='0';
+        },30+Math.random()*80);
+        setTimeout(()=>p.remove(),1200+Math.random()*400);
+      }
+    }
+  </script>
+</body>
+</html>
